@@ -5,7 +5,7 @@ from langgraph.graph import StateGraph, END
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
-# 1. Mock Lead Capture Tool [cite: 52, 53]
+# 1. Mock Lead Capture Tool 
 def mock_lead_capture(name, email, platform):
     print(f"\n[SYSTEM] Lead captured successfully: {name}, {email}, {platform}")
     return "Lead information saved successfully."
@@ -16,11 +16,10 @@ class AgentState(TypedDict):
     intent: str
     user_info: dict  # To store name, email, platform
 
-# 3. LLM Setup (Gemini 1.5 Flash) [cite: 85]
-# Inside main.py
+# 3. LLM Setup 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
-# 4. Intent Detection Node [cite: 20-23]
+# 4. Intent Detection Node 
 def intent_classifier(state: AgentState):
     last_message = state['messages'][-1].content
     prompt = f"""Classify the intent of this user message into one category: 
@@ -41,7 +40,7 @@ def handle_conversation(state: AgentState):
     system_prompt = f"You are an AI for AutoStream. Context: {json.dumps(kb)}. "
     
     if "high_intent" in intent:
-        # Check if we have all details [cite: 45-50]
+        # Check if we have all details 
         info = state.get('user_info', {})
         if not info.get('name'):
             res = "I'd love to get you started! What is your name?"
@@ -50,12 +49,12 @@ def handle_conversation(state: AgentState):
         elif not info.get('platform'):
             res = "And which platform do you create for (YouTube, Instagram, etc.)?"
         else:
-            # Trigger Tool [cite: 73]
+            # Trigger Tool
             tool_res = mock_lead_capture(info['name'], info['email'], info['platform'])
             res = f"{tool_res} Welcome to AutoStream!"
         return {"messages": [AIMessage(content=res)]}
     
-    # Standard RAG response [cite: 62]
+    # Standard RAG response 
     response = llm.invoke([HumanMessage(content=system_prompt)] + messages)
     return {"messages": [response]}
 
@@ -69,10 +68,9 @@ workflow.add_edge("respond", END)
 
 app = workflow.compile()
 
-# Example Execution Flow [cite: 55-72]
+# Example Execution Flow
 def run_demo():
     inputs = {"messages": [HumanMessage(content="Hi, tell me about your pricing.")], "user_info": {}}
-    # You would loop this in a real app to maintain state
     output = app.invoke(inputs)
     print("Agent:", output['messages'][-1].content)
 
@@ -82,7 +80,7 @@ def run_interactive_session():
     print("--- AutoStream AI Agent Active ---")
     print("(Type 'exit' to quit)\n")
     
-    # Initialize the state [cite: 88, 90]
+    # Initialize the state 
     current_state = {
         "messages": [],
         "user_data": {},
